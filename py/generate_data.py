@@ -1,11 +1,11 @@
 import json
 
-with open('item_data.json', 'r') as items:
+with open('../json/item_data.json', 'r') as items:
     item_list = json.load(items)
     EXCEPTIONS = {key.lower(): value for (key, value) in item_list['basic'].items()}
     item_list = item_list['data']
 
-with open('map_data.json', 'r') as maps:
+with open('../json/map_data.json', 'r') as maps:
     map_list = json.load(maps)['data']
 
 items_by_map = {}

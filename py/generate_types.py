@@ -1,17 +1,17 @@
 import json
 
-from data_types import Map, Item, Champion, SummonerSpell
+from py.data_types import Map, Item, Champion, SummonerSpell
 
-with open('item_data.json', 'r') as items:
+with open('../json/item_data.json', 'r') as items:
     item_list = json.load(items)['data']
 
-with open('map_data.json', 'r') as maps:
+with open('../json/map_data.json', 'r') as maps:
     map_list = json.load(maps)['data']
 
-with open('champion_data.json', 'r') as champions:
+with open('../json/champion_data.json', 'r') as champions:
     champion_list = json.load(champions)['data']
 
-with open('summoner_spell_data.json', 'r') as summonerspells:
+with open('../json/summoner_spell_data.json', 'r') as summonerspells:
     summoner_spell_list = json.load(summonerspells)['data']
 
 Items = []

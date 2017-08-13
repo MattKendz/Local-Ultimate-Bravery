@@ -1,7 +1,8 @@
-from typing import List
 import collections
+from typing import List
 
-from generate_data import EXCEPTIONS
+from py.generate_data import EXCEPTIONS
+
 
 def initializeValue(*args):
     dictionary = args[0]

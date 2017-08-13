@@ -1,13 +1,14 @@
 import random
-import requests
 import webbrowser
+import requests
+import os
 
-import grab_from_api
+from py import grab_from_api
 
 
 def main():
-    from generate_types import Items, Maps, Champions, SummonerSpells
-    from generate_data import items_by_map, map_name_to_id, item_id_to_name, map_id_to_mode
+    from py.generate_types import Items, Maps, Champions, SummonerSpells
+    from py.generate_data import items_by_map, map_name_to_id, map_id_to_mode
 
     Map_Idx = dict(enumerate([map.getName() for map in Maps]))
 
@@ -144,7 +145,7 @@ def main():
     print('Summoner Spells: {}'.format(SUMMONER_URLS))
     print('Items: {}'.format(ITEM_URLS))
 
-    html_file = open('test_file.html', 'w')
+    html_file = open('../html/test_file.html', 'w')
 
     message = """
     <html><head><body>
@@ -184,7 +185,7 @@ def main():
     html_file.write(message)
     html_file.close()
 
-    webbrowser.open_new_tab('test_file.html')
+    webbrowser.open('file://' + os.path.realpath('../html/test_file.html'))
 
 
 if __name__ == "__main__":
