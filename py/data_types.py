@@ -1,5 +1,6 @@
 import collections
-from typing import List
+import json
+from typing import List, Tuple
 
 from py.generate_data import EXCEPTIONS
 
@@ -187,6 +188,52 @@ class SummonerSpell:
             "name": self._name,
             "description": self._description,
             "modes": self._modes,
+        })
+
+    def __repr__(self):
+        return str(self)
+
+# TODO: Make this class JSON Serializable
+class Build:
+    def __init__(
+        self,
+        champion: Champion,
+        summoners: Tuple[SummonerSpell, SummonerSpell],
+        ability: str,
+        masteries: Tuple[int, int, int],
+        items: Tuple[Item, Item, Item, Item, Item, Item]
+    ) -> None:
+        assert ability in ['Q', 'W', 'E', 'R']
+        assert (masteries[0] + masteries[1] + masteries[2] == 30)
+
+        self._champion = champion
+        self._summoners = summoners
+        self._ability = ability
+        self._masteries = masteries
+        self._items = items
+
+    def getChampion(self):
+        return self._champion
+
+    def getSummoners(self):
+        return self._summoners
+
+    def getAbility(self):
+        return self._ability
+
+    def getMasteries(self):
+        return self._masteries
+
+    def getItems(self):
+        return self._items
+
+    def __str__(self):
+        return str({
+            "champion": self._champion,
+            "summoners": self._summoners,
+            "ability": self._ability,
+            "masteries": self._masteries,
+            "items": self._items,
         })
 
     def __repr__(self):

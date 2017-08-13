@@ -1,12 +1,13 @@
+import json
 import random
-import webbrowser
 import requests
-import os
 
-from py import grab_from_api
+from py.grab_from_api import BASE_URL, VERSION_DATA
 
+ABILITIES = ['Q', 'W', 'E']
 
 def main():
+    from py.data_types import Build
     from py.generate_types import Items, Maps, Champions, SummonerSpells
     from py.generate_data import items_by_map, map_name_to_id, map_id_to_mode
 
@@ -32,6 +33,7 @@ def main():
     map_value = map_name_to_id[map_name]
     CHAMPION = random.choice(Champions)
 
+    # To set CHAMPION to a specific one, uncomment line below
     # CHAMPION = [c for c in Champions if c.getName() == 'Viktor'][0]
 
     FEROCITY = random.randint(0, 30)
@@ -63,8 +65,9 @@ def main():
             FEROCITY += difference / 2
             RESOLVE += difference - difference / 2
 
-    print('Masteries: {} / {} / {}'.format(FEROCITY, CUNNING, RESOLVE))
     assert (FEROCITY + CUNNING + RESOLVE == 30)
+
+    MASTERIES = tuple([FEROCITY, CUNNING, RESOLVE])
 
     map_modes = map_id_to_mode[map_value]
     summoner_choice = [
@@ -72,39 +75,31 @@ def main():
         if bool(set(map_modes) & set(summoner.getModes()))
     ]
 
-    SUMMONER_SET = set()
-    while(len(SUMMONER_SET) < 2):
-        SUMMONER_SET.add(random.choice(summoner_choice))
-
-    SUMMONER_URLS = ['http://ddragon.leagueoflegends.com/cdn/{}/img/spell/{}'.format(
-        grab_from_api.VERSION_DATA['summoner'], summ.getImage()
-    ) for summ in SUMMONER_SET]
+    SUMMONERS = set()
+    while len(SUMMONERS) < 2:
+        SUMMONERS.add(random.choice(summoner_choice))
 
     ability_q = random.random()
     ability_w = random.random()
     ability_e = random.random()
-    ABILITIES = ['Q', 'W', 'E']
 
     if ability_q == max(ability_q, ability_w, ability_e):
-        ABILITY = 0
+        ABILITY_IDX = 0
     elif ability_w == max(ability_q, ability_w, ability_e):
-        ABILITY = 1
+        ABILITY_IDX = 1
     else:
-        ABILITY = 2
+        ABILITY_IDX = 2
 
-    champion_url = grab_from_api.BASE_URL.format(
-        grab_from_api.VERSION_DATA['champion'], 'champion/{}'.format(CHAMPION.getID())
-    )
+    ABILITY = ABILITIES[ABILITY_IDX]
 
-    champion = requests.get(champion_url)
-    champion_data = champion.json()['data'][CHAMPION.getID()]
-    spell = champion_data['spells'][ABILITY]
+    if CHAMPION.getStats()['attackrange'] <= 250:
+        # Melee Champ, so remove ranged items
+        RANGE_LIMITATIONS = ['Runaan\'s Hurricane']
+    else:
+        # Ranged Champ, so remove melee items
+        RANGE_LIMITATIONS = ['Ravenous Hydra', 'Titanic Hydra', 'Tiamat']
 
-    SPELL_URL = 'http://ddragon.leagueoflegends.com/cdn/{}/img/spell/{}.png'.format(
-        grab_from_api.VERSION_DATA['champion'], spell['id']
-    )
-
-    item_set = [
+    item_choices = [
         item for item in Items
         if item.getID() in items_by_map[map_value]
         and not item.getConsumed()
@@ -116,78 +111,37 @@ def main():
         and 'Trinket' not in item.getTags()
         and 'Consumable' not in item.getTags()
         and not item.getHideFromAll()
+        and item.getName() not in RANGE_LIMITATIONS
     ]
-    BOOT_SET = [item for item in item_set if 'Boots' in item.getTags()]
-    items_without_boots = [item for item in item_set if item not in BOOT_SET]
 
-    BOOT_CHOICE = [random.choice(BOOT_SET)] if CHAMPION.getName() != 'Cassiopeia' else []
-    ITEM_SET = [item for item in items_without_boots if item.getRequired() == CHAMPION.getName()]
+    BOOT_SET = [item for item in item_choices if 'Boots' in item.getTags()]
+    ITEMS_WITHOUT_BOOTS = [item for item in item_choices if item not in BOOT_SET]
+
+    # Makes sure Cassiopeia doesn't get boots
+    CANNOT_BUY_BOOTS = ['Cassiopeia']
+    BOOT_CHOICE = [random.choice(BOOT_SET)] if CHAMPION.getName() not in CANNOT_BUY_BOOTS else []
+    ITEM_SET = [item for item in ITEMS_WITHOUT_BOOTS if item.getRequired() == CHAMPION.getName()]
 
     # Must do this for Viktor, future champions with a required starting item
-    items_without_boots = [item for item in items_without_boots if item not in ITEM_SET]
+    ITEMS_WITHOUT_BOOTS = [item for item in ITEMS_WITHOUT_BOOTS if item not in ITEM_SET]
 
-    while(len(ITEM_SET) + len(BOOT_CHOICE) < 6):
-        ITEM_SET.append(random.choice(items_without_boots))
+    while len(ITEM_SET) + len(BOOT_CHOICE) < 6:
+        ITEM_SET.append(random.choice(ITEMS_WITHOUT_BOOTS))
 
     random.shuffle(ITEM_SET)
     ITEM_SET = BOOT_CHOICE + ITEM_SET
 
-    CHAMPION_URL = 'http://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}'.format(
-        grab_from_api.VERSION_DATA['champion'], CHAMPION.getImage()
-    )
-
-    ITEM_URLS = ['http://ddragon.leagueoflegends.com/cdn/{}/img/item/{}'.format(
-        grab_from_api.VERSION_DATA['item'], item.getImage()
-    ) for item in ITEM_SET]
-
-    print('Champion: {}'.format(CHAMPION_URL))
-    print('First Max: {} -> {}'.format(ABILITIES[ABILITY], SPELL_URL))
-    print('Summoner Spells: {}'.format(SUMMONER_URLS))
-    print('Items: {}'.format(ITEM_URLS))
-
-    html_file = open('../html/test_file.html', 'w')
-
-    message = """
-    <html><head><body>
-    <div>
-    <img src={}>
-    </div><br><div>
-    <img src={}>
-    <b><font size="7">{} / {} / {}</font></b>
-    </div><br><div>
-    <img src={}>
-    <img src={}>
-    </div><br><div>
-    <img src={}>
-    <img src={}>
-    <img src={}>
-    <img src={}>
-    <img src={}>
-    <img src={}>
-    </div>
-    </body></head></html>
-    """.format(
-        CHAMPION_URL,
-        SPELL_URL,
-        FEROCITY,
-        CUNNING,
-        RESOLVE,
-        SUMMONER_URLS[0],
-        SUMMONER_URLS[1],
-        ITEM_URLS[0],
-        ITEM_URLS[1],
-        ITEM_URLS[2],
-        ITEM_URLS[3],
-        ITEM_URLS[4],
-        ITEM_URLS[5],
-    )
-
-    html_file.write(message)
-    html_file.close()
-
-    webbrowser.open('file://' + os.path.realpath('../html/test_file.html'))
-
+    BUILD = Build(CHAMPION, tuple(SUMMONERS), ABILITY, MASTERIES, tuple(ITEM_SET))
+    # BUILD_DICT = {
+    #     "name": CHAMPION.getName(),
+    #     "summoners": sorted([summ.getName() for summ in list(SUMMONERS)]),
+    #     "ability": ABILITY,
+    #     "masteries": list(MASTERIES),
+    #     "items": sorted([item.getName() for item in ITEM_SET]),
+    # }
+    #
+    # with open('../json/current_build.json', 'w') as build_file:
+    #     json.dump(BUILD_DICT, build_file)
 
 if __name__ == "__main__":
-    # grab_from_api.main()
     main()
