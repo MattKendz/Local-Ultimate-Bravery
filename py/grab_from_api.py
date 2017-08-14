@@ -1,6 +1,8 @@
 import requests
 import json
 
+from py import generate_types, generate_data
+
 BASE_URL = 'http://ddragon.leagueoflegends.com/cdn/{}/data/en_US/{}.json'
 VERSION_URL = 'https://ddragon.leagueoflegends.com/realms/na.json'
 VERSIONS = requests.get(VERSION_URL)

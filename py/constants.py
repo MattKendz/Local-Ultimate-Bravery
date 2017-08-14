@@ -1,0 +1,1 @@
+ABILITIES = ['Q', 'W', 'E', 'R']

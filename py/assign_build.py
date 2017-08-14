@@ -2,9 +2,10 @@ import json
 import random
 import requests
 
+from py.constants import ABILITIES
+from py.data_types import ObjectEncoder
 from py.grab_from_api import BASE_URL, VERSION_DATA
 
-ABILITIES = ['Q', 'W', 'E']
 
 def main():
     from py.data_types import Build
@@ -34,7 +35,7 @@ def main():
     CHAMPION = random.choice(Champions)
 
     # To set CHAMPION to a specific one, uncomment line below
-    # CHAMPION = [c for c in Champions if c.getName() == 'Viktor'][0]
+    # CHAMPION = [c for c in Champions if c.getName() == 'Udyr'][0]
 
     FEROCITY = random.randint(0, 30)
     CUNNING = random.randint(0, 30)
@@ -79,17 +80,17 @@ def main():
     while len(SUMMONERS) < 2:
         SUMMONERS.add(random.choice(summoner_choice))
 
-    ability_q = random.random()
-    ability_w = random.random()
-    ability_e = random.random()
+    ability_gen = [
+        random.random(),
+        random.random(),
+        random.random(),
+        random.random(),
+    ]
 
-    if ability_q == max(ability_q, ability_w, ability_e):
-        ABILITY_IDX = 0
-    elif ability_w == max(ability_q, ability_w, ability_e):
-        ABILITY_IDX = 1
-    else:
-        ABILITY_IDX = 2
-
+    # Makes sure champs in MAX_R can max R ability first
+    MAX_R = ['Udyr']
+    MAX_ABILITY = (4 if CHAMPION.getName() in MAX_R else 3)
+    ABILITY_IDX = ability_gen.index(max(ability_gen[:MAX_ABILITY]))
     ABILITY = ABILITIES[ABILITY_IDX]
 
     if CHAMPION.getStats()['attackrange'] <= 250:
@@ -105,7 +106,7 @@ def main():
         and not item.getConsumed()
         and item.getInStore()
         and (not item.getRequired() or item.getRequired() == CHAMPION.getName())
-        and item.getPurchasable()
+        and item.getGold()['purchasable']
         and not item.buildsInto()
         and item.buildsFrom()
         and 'Trinket' not in item.getTags()
@@ -140,8 +141,9 @@ def main():
     #     "items": sorted([item.getName() for item in ITEM_SET]),
     # }
     #
-    # with open('../json/current_build.json', 'w') as build_file:
-    #     json.dump(BUILD_DICT, build_file)
+    with open('../json/current_build.json', 'w') as build_file:
+        # json.dump(json.dumps(BUILD, cls=ObjectEncoder), build_file)
+        build_file.write(json.dumps(BUILD, cls=ObjectEncoder))
 
 if __name__ == "__main__":
     main()

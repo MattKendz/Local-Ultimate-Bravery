@@ -3,27 +3,28 @@ import os
 import requests
 import webbrowser
 
-from py.assign_build import ABILITIES
+from py.constants import ABILITIES
 from py.grab_from_api import BASE_URL, VERSION_DATA
 
 def main():
     with open('../json/current_build.json', 'r') as build_file:
         build_info = json.load(build_file)
 
-    MASTERIES = build_info['masteries']
-    CHAMPION = build_info['champion']
-    ABILITY = build_info['ability']
-    BUILD = build_info
+    MASTERIES = build_info['_masteries']
+    CHAMPION = build_info['_champion']
+    ABILITY = build_info['_ability']
+    ITEMS = build_info['_items']
+    SUMMONERS = build_info['_summoners']
 
     champion_url = BASE_URL.format(
-        VERSION_DATA['champion'], 'champion/{}'.format(CHAMPION.getID())
+        VERSION_DATA['champion'], 'champion/{}'.format(CHAMPION['_id'])
     )
     champion = requests.get(champion_url)
-    champion_data = champion.json()['data'][CHAMPION.getID()]
-    SPELL = champion_data['spells'][ABILITIES.index(CHAMPION.getAbility())]
+    champion_data = champion.json()['data'][CHAMPION['_id']]
+    SPELL = champion_data['spells'][ABILITIES.index(ABILITY)]
 
     CHAMPION_URL = 'http://ddragon.leagueoflegends.com/cdn/{}/img/champion/{}'.format(
-        VERSION_DATA['champion'], CHAMPION.getImage()
+        VERSION_DATA['champion'], CHAMPION['_image']['full']
     )
 
     SPELL_URL = 'http://ddragon.leagueoflegends.com/cdn/{}/img/spell/{}.png'.format(
@@ -31,12 +32,12 @@ def main():
     )
 
     SUMMONER_URLS = ['http://ddragon.leagueoflegends.com/cdn/{}/img/spell/{}'.format(
-        VERSION_DATA['summoner'], summ.getImage()
-    ) for summ in list(BUILD.getSummoners())]
+        VERSION_DATA['summoner'], summ['_image']['full']
+    ) for summ in SUMMONERS]
 
     ITEM_URLS = ['http://ddragon.leagueoflegends.com/cdn/{}/img/item/{}'.format(
-        VERSION_DATA['item'], item.getImage()
-    ) for item in list(BUILD.getItems())]
+        VERSION_DATA['item'], item['_image']['full']
+    ) for item in ITEMS]
 
     print('Champion: {}'.format(CHAMPION_URL))
     print('Masteries: {} / {} / {}'.format(MASTERIES[0], MASTERIES[1], MASTERIES[2]))
@@ -51,7 +52,12 @@ def main():
         <img src={}>
         </div><br><div>
         <img src={}>
-        <b><font size="7">{} / {} / {}</font></b>
+        </div><br><div>
+        <table style="table-layout: fixed; width: 200px;"><tr>
+        <td align="center" style="background-color:red;"><b><font size="7">{}</b></td>
+        <td align="center" style="background-color:blue;"><b><font size="7">{}</b></td>
+        <td align="center" style="background-color:green;"><b><font size="7">{}</b></td>
+        </tr></table>
         </div><br><div>
         <img src={}>
         <img src={}>

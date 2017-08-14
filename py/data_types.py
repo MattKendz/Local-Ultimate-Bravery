@@ -1,8 +1,31 @@
 import collections
+import inspect
 import json
 from typing import List, Tuple
 
 from py.generate_data import EXCEPTIONS
+
+
+class ObjectEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, "to_json"):
+            return self.default(obj.to_json())
+        elif hasattr(obj, "__dict__"):
+            d = dict(
+                (key, value)
+                for key, value in inspect.getmembers(obj)
+                if not key.startswith("__")
+                and not inspect.isabstract(value)
+                and not inspect.isbuiltin(value)
+                and not inspect.isfunction(value)
+                and not inspect.isgenerator(value)
+                and not inspect.isgeneratorfunction(value)
+                and not inspect.ismethod(value)
+                and not inspect.ismethoddescriptor(value)
+                and not inspect.isroutine(value)
+            )
+            return self.default(d)
+        return obj
 
 
 def initializeValue(*args):
@@ -21,12 +44,17 @@ class Map:
     def __init__(self, dictionary: dict) -> None:
         self._id = initializeValue(dictionary, 'MapId')
         self._name = initializeValue(dictionary, 'MapName')
+        self._image = initializeValue(dictionary, 'image')
+
 
     def getID(self):
         return self._id
 
     def getName(self):
         return self._name
+
+    def getImage(self):
+        return self._image
 
     def __str__(self):
         return str({
@@ -35,7 +63,7 @@ class Map:
         })
 
     def __repr__(self):
-        return str(self)
+        return json.dumps(self.__dict__)
 
 
 class Item:
@@ -43,13 +71,16 @@ class Item:
         self._id = int(item_id)
         self._name = initializeValue(dictionary, 'name')
         self._description = initializeValue(dictionary, 'description')
-        self._image = initializeValue(dictionary, 'image', 'full')
-        self._purchasable = initializeValue(dictionary, 'gold', 'purchasable')
+        self._image = initializeValue(dictionary, 'image')
+        self._gold = initializeValue(dictionary, 'gold')
         self._required = initializeValue(dictionary, 'requiredChampion')
         self._consumed = initializeValue(dictionary, 'consumed')
         self._hidefromall = initializeValue(dictionary, 'hideFromAll')
         self._instore = initializeValue(dictionary, 'inStore')
         self._tags = initializeValue(dictionary, 'tags')
+        self._plaintext = initializeValue(dictionary, 'plaintext')
+        self._stats = initializeValue(dictionary, 'stats')
+        self._depth = initializeValue(dictionary, 'depth')
 
         self._from = [int(item_id) for item_id in dictionary['from']] \
             if 'from' in dictionary else []
@@ -72,8 +103,8 @@ class Item:
     def getImage(self):
         return self._image
 
-    def getPurchasable(self):
-        return self._purchasable
+    def getGold(self):
+        return self._gold
 
     def getRequired(self):
         return self._required
@@ -90,6 +121,15 @@ class Item:
     def getTags(self):
         return self._tags
 
+    def getPlaintext(self):
+        return self._plaintext
+
+    def getStats(self):
+        return self._stats
+
+    def getDepth(self):
+        return self._depth
+
     def buildsFrom(self) -> List[int]:
         return self._from
 
@@ -104,19 +144,22 @@ class Item:
             "id": self._id,
             "name": self._name,
             "description": self._description,
-            "purchasable": self._purchasable,
+            "gold": self._gold,
             "required": self._required,
             "consumed": self._consumed,
             "hidefromall": self._hidefromall,
             "instore": self._instore,
             "tags": self._tags,
+            "plaintext": self._plaintext,
+            "stats": self._stats,
+            "depth": self._depth,
             "from": self._from,
             "into": self._into,
             "maps": self._maps,
         })
 
     def __repr__(self):
-        return str(self)
+        return json.dumps(self.__dict__)
 
 
 class Champion:
@@ -125,7 +168,11 @@ class Champion:
         self._name = initializeValue(dictionary, 'name')
         self._key = initializeValue(dictionary, 'key')
         self._title = initializeValue(dictionary, 'title')
-        self._image = initializeValue(dictionary, 'image', 'full')
+        self._blurb = initializeValue(dictionary, 'blurb')
+        self._info = initializeValue(dictionary, 'info')
+        self._image = initializeValue(dictionary, 'image')
+        self._tags = initializeValue(dictionary, 'tags')
+        self._partype = initializeValue(dictionary, 'partype')
         self._stats = initializeValue(dictionary, 'stats')
 
     def getID(self):
@@ -140,8 +187,20 @@ class Champion:
     def getTitle(self):
         return self._title
 
+    def getBlurb(self):
+        return self._blurb
+
+    def getInfo(self):
+        return self._info
+
     def getImage(self):
         return self._image
+
+    def getTags(self):
+        return self._tags
+
+    def getParType(self):
+        return self._partype
 
     def getStats(self):
         return self._stats
@@ -152,11 +211,15 @@ class Champion:
             "name": self._name,
             "key": self._key,
             "title": self._title,
+            "blurb": self._blurb,
+            "info": self._info,
+            "tags": self._tags,
+            "partype": self._partype,
             "stats": self._stats,
         })
 
     def __repr__(self):
-        return str(self)
+        return json.dumps(self.__dict__)
 
 
 class SummonerSpell:
@@ -164,8 +227,9 @@ class SummonerSpell:
         self._id = initializeValue(dictionary, 'id')
         self._name = initializeValue(dictionary, 'name')
         self._description = initializeValue(dictionary, 'description')
+        self._key = initializeValue(dictionary, 'key')
         self._modes = initializeValue(dictionary, 'modes')
-        self._image = initializeValue(dictionary, 'image', 'full')
+        self._image = initializeValue(dictionary, 'image')
 
     def getID(self):
         return self._id
@@ -175,6 +239,9 @@ class SummonerSpell:
 
     def getDescription(self):
         return self._description
+
+    def getKey(self):
+        return self._key
 
     def getModes(self):
         return self._modes
@@ -187,11 +254,12 @@ class SummonerSpell:
             "id": self._id,
             "name": self._name,
             "description": self._description,
+            "key": self._key,
             "modes": self._modes,
         })
 
     def __repr__(self):
-        return str(self)
+        return json.dumps(self.__dict__)
 
 # TODO: Make this class JSON Serializable
 class Build:
@@ -237,4 +305,4 @@ class Build:
         })
 
     def __repr__(self):
-        return str(self)
+        return json.dumps(self.__dict__)

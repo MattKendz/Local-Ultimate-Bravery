@@ -2,6 +2,7 @@ import json
 
 from py.data_types import Map, Item, Champion, SummonerSpell
 
+
 with open('../json/item_data.json', 'r') as items:
     item_list = json.load(items)['data']
 
@@ -19,16 +20,18 @@ Maps = []
 Champions = []
 SummonerSpells = []
 
-for _, data in map_list.items():
-    Maps.append(Map(data))
+def main():
+    for _, data in map_list.items():
+        Maps.append(Map(data))
 
-for item_id, data in item_list.items():
-    Items.append(Item(item_id, data))
+    for item_id, data in item_list.items():
+        Items.append(Item(item_id, data))
 
-for _, data in champion_list.items():
-    Champions.append(Champion(data))
+    for _, data in champion_list.items():
+        Champions.append(Champion(data))
 
-for _, data in summoner_spell_list.items():
-    SummonerSpells.append(SummonerSpell(data))
+    for _, data in summoner_spell_list.items():
+        SummonerSpells.append(SummonerSpell(data))
 
-
+if __name__ == "__main__":
+    main()
